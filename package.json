@@ -35,7 +35,7 @@
     "./schema.json": "./schema/retry-budget.schema.json"
   },
   "bin": {
-    "retry-budget": "./dist/cli.js"
+    "retry-budget": "dist/cli.js"
   },
   "sideEffects": false,
   "engines": {
