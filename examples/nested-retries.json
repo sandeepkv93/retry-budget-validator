@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "deadlineMs": 10000,
+  "root": {
+    "id": "client",
+    "kind": "sequential",
+    "overheadMs": { "min": 0, "max": 0 },
+    "retry": {
+      "maxAttempts": 4,
+      "backoff": { "kind": "constant", "delayMs": 100, "jitter": "none" }
+    },
+    "children": [
+      {
+        "id": "service",
+        "kind": "sequential",
+        "overheadMs": { "min": 0, "max": 0 },
+        "retry": {
+          "maxAttempts": 4,
+          "backoff": { "kind": "constant", "delayMs": 50, "jitter": "none" }
+        },
+        "children": [
+          {
+            "id": "sdk-request",
+            "kind": "leaf",
+            "attemptDurationMs": { "min": 100, "max": 100 },
+            "retry": {
+              "maxAttempts": 4,
+              "backoff": { "kind": "constant", "delayMs": 25, "jitter": "none" }
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

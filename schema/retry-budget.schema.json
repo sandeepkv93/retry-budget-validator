@@ -1,0 +1,149 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://retry-budget-validator.example.com/schema.json",
+  "title": "Retry Budget Validator Model",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "type": "integer",
+      "const": 1
+    },
+    "deadlineMs": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "root": {
+      "$ref": "#/$defs/operationNode"
+    }
+  },
+  "required": ["schemaVersion", "deadlineMs", "root"],
+  "additionalProperties": false,
+  "$defs": {
+    "msRange": {
+      "type": "object",
+      "properties": {
+        "min": { "type": "integer", "minimum": 0 },
+        "max": { "type": "integer", "minimum": 0 }
+      },
+      "required": ["min", "max"],
+      "additionalProperties": false
+    },
+    "jitter": {
+      "type": "string",
+      "enum": ["none", "full", "equal"]
+    },
+    "backoffNone": {
+      "type": "object",
+      "properties": { "kind": { "const": "none" } },
+      "required": ["kind"],
+      "additionalProperties": false
+    },
+    "backoffConstant": {
+      "type": "object",
+      "properties": {
+        "kind": { "const": "constant" },
+        "delayMs": { "type": "integer", "minimum": 0 },
+        "jitter": { "$ref": "#/$defs/jitter" }
+      },
+      "required": ["kind", "delayMs", "jitter"],
+      "additionalProperties": false
+    },
+    "backoffExponential": {
+      "type": "object",
+      "properties": {
+        "kind": { "const": "exponential" },
+        "initialDelayMs": { "type": "integer", "minimum": 0 },
+        "multiplier": { "type": "integer", "minimum": 1 },
+        "capDelayMs": { "type": "integer", "minimum": 0 },
+        "jitter": { "$ref": "#/$defs/jitter" }
+      },
+      "required": ["kind", "initialDelayMs", "multiplier", "capDelayMs", "jitter"],
+      "additionalProperties": false
+    },
+    "backoffExplicit": {
+      "type": "object",
+      "properties": {
+        "kind": { "const": "explicit" },
+        "delaysMs": {
+          "type": "array",
+          "items": { "type": "integer", "minimum": 0 }
+        },
+        "jitter": { "$ref": "#/$defs/jitter" }
+      },
+      "required": ["kind", "delaysMs", "jitter"],
+      "additionalProperties": false
+    },
+    "backoff": {
+      "oneOf": [
+        { "$ref": "#/$defs/backoffNone" },
+        { "$ref": "#/$defs/backoffConstant" },
+        { "$ref": "#/$defs/backoffExponential" },
+        { "$ref": "#/$defs/backoffExplicit" }
+      ]
+    },
+    "retryPolicy": {
+      "type": "object",
+      "properties": {
+        "maxAttempts": { "type": "integer", "minimum": 1, "maximum": 100000 },
+        "backoff": { "$ref": "#/$defs/backoff" }
+      },
+      "required": ["maxAttempts", "backoff"],
+      "additionalProperties": false
+    },
+    "nodeBase": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
+          "maxLength": 64
+        },
+        "label": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "retry": { "$ref": "#/$defs/retryPolicy" }
+      },
+      "required": ["id", "retry"]
+    },
+    "leafNode": {
+      "allOf": [
+        { "$ref": "#/$defs/nodeBase" },
+        {
+          "type": "object",
+          "properties": {
+            "kind": { "const": "leaf" },
+            "attemptDurationMs": { "$ref": "#/$defs/msRange" }
+          },
+          "required": ["kind", "attemptDurationMs"],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "groupNode": {
+      "allOf": [
+        { "$ref": "#/$defs/nodeBase" },
+        {
+          "type": "object",
+          "properties": {
+            "kind": { "enum": ["sequential", "parallel"] },
+            "overheadMs": { "$ref": "#/$defs/msRange" },
+            "attemptBudgetMs": { "type": "integer", "minimum": 1 },
+            "children": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/operationNode" }
+            }
+          },
+          "required": ["kind", "overheadMs", "children"],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "operationNode": {
+      "oneOf": [
+        { "$ref": "#/$defs/leafNode" },
+        { "$ref": "#/$defs/groupNode" }
+      ]
+    }
+  }
+}

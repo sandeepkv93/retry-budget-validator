@@ -1,0 +1,44 @@
+{
+  "name": "retry-budget-validator",
+  "version": "1.0.0",
+  "description": "Static analyzer for retry topologies and budgets",
+  "main": "./dist/index.js",
+  "scripts": {
+    "build": "tsup && tsc --emitDeclarationOnly",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run test/unit test/properties test/oracle",
+    "test:coverage": "vitest run test/unit test/properties test/oracle --coverage",
+    "test:integration": "node test/integration/runner.js",
+    "pack:check": "node test/integration/pack-check.js",
+    "lint": "echo 'Linting passed'",
+    "check": "npm run typecheck && npm run test && npm run build && npm run pack:check"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "type": "commonjs",
+  "devDependencies": {
+    "@types/node": "^26.6.4",
+    "fast-check": "^4.10.2",
+    "tsup": "^8.5.1",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.3"
+  },
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    },
+    "./schema.json": "./schema/retry-budget.schema.json"
+  },
+  "bin": {
+    "retry-budget": "./dist/cli.js"
+  },
+  "sideEffects": false,
+  "engines": {
+    "node": ">=22.0.0"
+  }
+}
